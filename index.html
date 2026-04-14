@@ -166,6 +166,8 @@ canvas#mc.dragging{cursor:grabbing;}
   <span id="stat-zoom">줌: 100%</span>
   <span id="stat-selected">선택: 없음</span>
   <span id="stat-multi"></span>
+  <span id="stat-saved" style="margin-left:auto;display:none;">💾 저장: <span id="stat-saved-time"></span></span>
+  <span id="stat-loaded" style="display:none;">📂 불러옴: <span id="stat-loaded-time"></span></span>
 </div>
 
 <script>
@@ -404,6 +406,10 @@ document.getElementById('btn-copy').onclick=async()=>{
   if(!ok){try{ok=execCopy(text);}catch{}}
   if(ok){
     showToast('✅ 클립보드에 저장했어요! 잃어버리지 않도록 어딘가에 붙여넣어 보관하세요.',3800);
+    const now=new Date();
+    const ts=now.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    document.getElementById('stat-saved-time').textContent=ts;
+    document.getElementById('stat-saved').style.display='';
   }else{
     // 둘 다 실패 시 → 모달에 텍스트 띄워서 수동 복사
     openSaveFallbackModal(text);
@@ -462,6 +468,11 @@ document.getElementById('paste-ok').onclick=()=>{
     closePasteModal();draw();
     const ts=d._saved?new Date(d._saved).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
     showToast('✅ 불러오기 완료!'+(ts?' (저장: '+ts+')':''));
+    if(d._saved){
+      const loadedTs=new Date(d._saved).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      document.getElementById('stat-loaded-time').textContent=loadedTs;
+      document.getElementById('stat-loaded').style.display='';
+    }
   }catch{
     pasteErr.textContent='⚠ 데이터를 읽는 중 오류가 발생했습니다.';pasteErr.style.display='block';
   }
