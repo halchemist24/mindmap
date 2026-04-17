@@ -104,6 +104,7 @@ canvas#mc.dragging{cursor:grabbing;}
     <span>우클릭: 메뉴</span>
     <span>Ctrl+클릭/드래그: 다중선택</span>
     <span>Tab: 자식추가</span>
+    <span>Shift+Tab: 형제추가</span>
     <span>Del: 삭제</span>
     <span>Ctrl+Z/Y: 취소/재실행</span>
   </div>
@@ -738,7 +739,8 @@ document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.key==='z'&&e.shiftKey))){e.preventDefault();redo();return;}
   const sel=[...selectedIds];
   if((e.key==='Delete'||e.key==='Backspace')&&sel.length){e.preventDefault();pushH();sel.forEach(id=>rmTree(id));selectedIds.clear();draw();return;}
-  if(e.key==='Tab'&&sel.length===1){e.preventDefault();addChildNode(sel[0]);return;}
+  if(e.key==='Tab'&&!e.shiftKey&&sel.length===1){e.preventDefault();addChildNode(sel[0]);return;}
+  if(e.key==='Tab'&&e.shiftKey&&sel.length===1){e.preventDefault();addSiblingNode(sel[0]);return;}
   if(e.key==='Enter'&&!e.shiftKey&&sel.length===1){e.preventDefault();const n=nodes.find(n=>n.id===sel[0]);if(n)openEditor(n);return;}
   if(e.key==='Escape'){closeCtxMenu();closeHlPicker();closePasteModal();confirmModal.classList.remove('open');selectedIds.clear();draw();}
   if((e.ctrlKey||e.metaKey)&&e.key==='a'){e.preventDefault();nodes.forEach(n=>selectedIds.add(n.id));draw();}
@@ -802,7 +804,8 @@ function closeEditorDesktop(save){
 editor.addEventListener('blur',()=>closeEditorDesktop(true));
 editor.addEventListener('keydown',e=>{
   if(e.key==='Escape'){e.preventDefault();closeEditorDesktop(false);}
-  if(e.key==='Tab'){e.preventDefault();closeEditorDesktop(true);if(editTarget==null&&selectedIds.size===1)addChildNode([...selectedIds][0]);}
+  if(e.key==='Tab'&&!e.shiftKey){e.preventDefault();closeEditorDesktop(true);if(editTarget==null&&selectedIds.size===1)addChildNode([...selectedIds][0]);}
+  if(e.key==='Tab'&&e.shiftKey){e.preventDefault();const prevTarget=editTarget;closeEditorDesktop(true);if(prevTarget==null&&selectedIds.size===1)addSiblingNode([...selectedIds][0]);else if(prevTarget)addSiblingNode(prevTarget.id);}
 });
 
 // ── 모바일 편집 모달 ──
@@ -877,7 +880,7 @@ function showCtxMenu(cx,cy,hit,mx,my){
     item(`${multi.length}개 노드 삭제`,()=>{pushH();multi.forEach(id=>rmTree(id));selectedIds.clear();draw();},'danger');
   }else if(hit){
     item('자식 노드 추가 (Tab)',()=>addChildNode(hit.id));
-    item('형제 노드 추가',()=>addSiblingNode(hit.id));
+    item('형제 노드 추가 (Shift+Tab)',()=>addSiblingNode(hit.id));
     item('이름 편집 (Enter)',()=>openEditor(hit));
     sep();
     item('하이라이트 태그',()=>showHlPicker(cx,cy,[hit.id]));
